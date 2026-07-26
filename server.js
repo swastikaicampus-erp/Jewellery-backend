@@ -29,8 +29,6 @@ app.use(cors({
 
 
 
-// tetsmdkdmk
-
 app.use(express.json());
 
 app.use('/api/auth', require('./routes/authRoutes'));
