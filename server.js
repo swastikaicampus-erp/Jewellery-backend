@@ -24,7 +24,12 @@ app.use(cors({
     }
   },
   credentials: true,
+
 }));
+
+
+
+// tetsmdkdmk
 
 app.use(express.json());
 
@@ -33,7 +38,10 @@ app.use('/api/master', require('./routes/masterRoutes'));
 app.use('/api/shop', require('./routes/shopRoutes'));
 app.use('/api/customer', require('./routes/customerRoutes'));
 app.use('/uploads', express.static('uploads'));
+
+app.use('/apk', express.static('apk')); 
 app.use(errorHandler);
 
 const PORT = process.env.PORT || 5000;
+
 app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
