@@ -9,8 +9,20 @@ startSubscriptionCron();
 const app = express();
 connectDB();
 
+const allowedOrigins = [
+  'http://localhost:5173',                    // local development
+  'https://nidhiplus-e63b8.web.app',           // live frontend
+];
+
 app.use(cors({
-  origin: 'http://localhost:5173', // Vite dev server
+  origin: function (origin, callback) {
+    // Postman/curl jaise tools se aane wali requests (jinme origin nahi hota) allow karo
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error('CORS policy: is origin ki permission nahi hai'));
+    }
+  },
   credentials: true,
 }));
 
