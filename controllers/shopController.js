@@ -17,7 +17,6 @@ const getExpiryFromPlan = (durationInDays) => {
   return now;
 };
 
-// POST /api/master/shops  (multipart/form-data — qrImage file ke saath)
 exports.createShop = async (req, res, next) => {
   try {
     const { shopName, ownerName, phone, email, address, planId, transactionId, adminPassword } = req.body;
@@ -31,14 +30,18 @@ exports.createShop = async (req, res, next) => {
 
     const shopCode = await generateShopCode();
 
+    const qrFile = req.files?.qrImage?.[0];
+    const logoFile = req.files?.logo?.[0];
+
     const shop = await Shop.create({
       shopName, ownerName, phone, email, address,
       shopCode,
+      logoUrl: logoFile ? `/uploads/${logoFile.filename}` : '',
       planId,
       subscriptionExpiry: getExpiryFromPlan(plan.durationInDays),
       paymentProof: {
         transactionId: transactionId || '',
-        qrImageUrl: req.file ? `/uploads/${req.file.filename}` : '',
+        qrImageUrl: qrFile ? `/uploads/${qrFile.filename}` : '',
       },
     });
 
@@ -57,6 +60,46 @@ exports.createShop = async (req, res, next) => {
       shopAdminLogin: { email: shopAdmin.email, password: adminPassword },
       publicLink: `/shop/${shop.shopCode}`,
     });
+  } catch (err) {
+    next(err);
+  }
+};
+
+exports.updateShopDetails = async (req, res, next) => {
+  try {
+    const { shopName, ownerName, phone, email, address } = req.body;
+    const updateData = { shopName, ownerName, phone, email, address };
+
+    const logoFile = req.files?.logo?.[0];
+    if (logoFile) updateData.logoUrl = `/uploads/${logoFile.filename}`;
+
+    const shop = await Shop.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('planId', 'name durationInDays price');
+
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.json({ message: 'Shop updated', shop });
+  } catch (err) {
+    next(err);
+  }
+};exports.updateShopDetails = async (req, res, next) => {
+  try {
+    const { shopName, ownerName, phone, email, address } = req.body;
+    const updateData = { shopName, ownerName, phone, email, address };
+
+    const logoFile = req.files?.logo?.[0];
+    if (logoFile) updateData.logoUrl = `/uploads/${logoFile.filename}`;
+
+    const shop = await Shop.findByIdAndUpdate(
+      req.params.id,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('planId', 'name durationInDays price');
+
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.json({ message: 'Shop updated', shop });
   } catch (err) {
     next(err);
   }

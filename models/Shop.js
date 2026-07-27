@@ -9,6 +9,8 @@ const shopSchema = new mongoose.Schema(
     address: { type: String, trim: true },
     shopCode: { type: String, required: true, unique: true, trim: true },
 
+    logoUrl: { type: String, default: '' },
+
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
     subscriptionExpiry: { type: Date, required: true },
 
