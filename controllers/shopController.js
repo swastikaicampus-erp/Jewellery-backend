@@ -19,8 +19,7 @@ const getExpiryFromPlan = (durationInDays) => {
 
 exports.createShop = async (req, res, next) => {
   try {
-    const { shopName, ownerName, phone, email, address, planId, transactionId, adminPassword } = req.body;
-
+const { shopName, ownerName, phone, email, address, planId, transactionId, adminPassword, marqueeText } = req.body; 
     if (!shopName || !ownerName || !phone || !adminPassword || !planId) {
       return res.status(400).json({ message: 'Required fields missing' });
     }
@@ -37,6 +36,7 @@ exports.createShop = async (req, res, next) => {
       shopName, ownerName, phone, email, address,
       shopCode,
       logoUrl: logoFile ? `/uploads/${logoFile.filename}` : '',
+      marqueeText: marqueeText || '',
       planId,
       subscriptionExpiry: getExpiryFromPlan(plan.durationInDays),
       paymentProof: {
@@ -67,14 +67,11 @@ exports.createShop = async (req, res, next) => {
 
 exports.updateShopDetails = async (req, res, next) => {
   try {
-    const { shopName, ownerName, phone, email, address } = req.body;
-    const updateData = { shopName, ownerName, phone, email, address };
+    const { shopName, ownerName, phone, email, address, marqueeText } = req.body; // marqueeText nikala
+    const updateData = { shopName, ownerName, phone, email, address, marqueeText }; // <-- Yahan update data me daala
 
-    // Yahan check karein ki req.files ya req.file kya aa raha hai
-    const logoFile = req.files?.logo?.[0] || req.file; 
-    if (logoFile) {
-      updateData.logoUrl = `/uploads/${logoFile.filename}`;
-    }
+    const logoFile = req.files?.logo?.[0];
+    if (logoFile) updateData.logoUrl = `/uploads/${logoFile.filename}`;
 
     const shop = await Shop.findByIdAndUpdate(
       req.params.id,
@@ -138,22 +135,7 @@ exports.updateShopStatus = async (req, res, next) => {
   }
 };
 
-// PUT /api/master/shops/:id  (basic details edit)
-exports.updateShopDetails = async (req, res, next) => {
-  try {
-    const { shopName, ownerName, phone, email, address } = req.body;
-    const shop = await Shop.findByIdAndUpdate(
-      req.params.id,
-      { shopName, ownerName, phone, email, address },
-      { new: true, runValidators: true }
-    ).populate('planId', 'name durationInDays price');
 
-    if (!shop) return res.status(404).json({ message: 'Shop not found' });
-    res.json({ message: 'Shop updated', shop });
-  } catch (err) {
-    next(err);
-  }
-};
 
 // DELETE /api/master/shops/:id
 exports.deleteShop = async (req, res, next) => {
