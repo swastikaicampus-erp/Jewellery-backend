@@ -7,7 +7,7 @@ const Rate = require('../models/Rate');
 // GET /api/customer/shop-info
 exports.getMyShopInfo = async (req, res, next) => {
   try {
-    const shop = await Shop.findById(req.customer.shopId).select('shopName ownerName phone address shopCode');
+    const shop = await Shop.findById(req.customer.shopId).select('shopName ownerName phone address shopCode promoSlides');
     if (!shop) return res.status(404).json({ message: 'Shop not found' });
     res.json(shop);
   } catch (err) {

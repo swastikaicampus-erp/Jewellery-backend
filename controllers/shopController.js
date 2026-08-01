@@ -160,3 +160,107 @@ exports.getMyShopProfile = async (req, res, next) => {
     next(err);
   }
 };
+// GET /api/shop/profile — already hai (getMyShopProfile)
+
+// PUT /api/shop/profile — shop admin apni khud ki shop details edit kare
+exports.updateMyProfile = async (req, res, next) => {
+  try {
+    const { shopName, ownerName, phone, email, address } = req.body;
+    const updateData = { shopName, ownerName, phone, email, address };
+
+    const logoFile = req.file; // upload.single('logo') se aata hai
+    if (logoFile) updateData.logoUrl = `/uploads/${logoFile.filename}`;
+
+    const shop = await Shop.findByIdAndUpdate(
+      req.user.shopId,
+      updateData,
+      { new: true, runValidators: true }
+    ).populate('planId', 'name durationInDays price');
+
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.json(shop);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// POST /api/shop/profile/promo-slides  (shop_admin) — naya slide add kare
+exports.addPromoSlide = async (req, res, next) => {
+  try {
+    const { title, subtitle } = req.body;
+    const imageFile = req.file; // upload.single('image')
+    if (!imageFile) return res.status(400).json({ message: 'Slide image is required' });
+
+    const shop = await Shop.findByIdAndUpdate(
+      req.user.shopId,
+      {
+        $push: {
+          promoSlides: {
+            imageUrl: `/uploads/${imageFile.filename}`,
+            title: title || '',
+            subtitle: subtitle || '',
+          },
+        },
+      },
+      { new: true, runValidators: true }
+    );
+
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.status(201).json(shop.promoSlides);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// PUT /api/shop/profile/promo-slides/:slideId  (shop_admin) — title/subtitle/image edit
+exports.updatePromoSlide = async (req, res, next) => {
+  try {
+    const { title, subtitle } = req.body;
+    const imageFile = req.file;
+
+    const shop = await Shop.findById(req.user.shopId);
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+
+    const slide = shop.promoSlides.id(req.params.slideId);
+    if (!slide) return res.status(404).json({ message: 'Slide not found' });
+
+    if (title !== undefined) slide.title = title;
+    if (subtitle !== undefined) slide.subtitle = subtitle;
+    if (imageFile) slide.imageUrl = `/uploads/${imageFile.filename}`;
+
+    await shop.save();
+    res.json(shop.promoSlides);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// DELETE /api/shop/profile/promo-slides/:slideId  (shop_admin)
+exports.deletePromoSlide = async (req, res, next) => {
+  try {
+    const shop = await Shop.findByIdAndUpdate(
+      req.user.shopId,
+      { $pull: { promoSlides: { _id: req.params.slideId } } },
+      { new: true }
+    );
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.json(shop.promoSlides);
+  } catch (err) {
+    next(err);
+  }
+};
+
+// GET /api/public/shops/:shopCode  (no auth) — customer-facing storefront ke liye
+// IMPORTANT: yeh apne public/storefront routes file me khud se wire karna hoga,
+// shop_admin wale protected router (jo protect+authorize use karta hai) me isko
+// mat daalna — customer login nahi karta.
+exports.getShopPublicProfile = async (req, res, next) => {
+  try {
+    const shop = await Shop.findOne({ shopCode: req.params.shopCode, status: 'active' })
+      .select('shopName logoUrl marqueeText promoSlides shopCode');
+    if (!shop) return res.status(404).json({ message: 'Shop not found' });
+    res.json(shop);
+  } catch (err) {
+    next(err);
+  }
+};

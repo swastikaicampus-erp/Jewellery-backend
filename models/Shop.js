@@ -11,6 +11,16 @@ const shopSchema = new mongoose.Schema(
 
     logoUrl: { type: String, default: '' },
     marqueeText: { type: String, default: '' },
+
+    // Home page promo slider — shop_admin dashboard se dynamic manage hota hai
+    promoSlides: [
+      {
+        imageUrl: { type: String, required: true },
+        title: { type: String, trim: true, default: '' },
+        subtitle: { type: String, trim: true, default: '' },
+      },
+    ],
+
     planId: { type: mongoose.Schema.Types.ObjectId, ref: 'Plan', required: true },
     subscriptionExpiry: { type: Date, required: true },
 

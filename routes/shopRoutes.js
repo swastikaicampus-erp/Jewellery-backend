@@ -5,7 +5,13 @@ const { checkSubscription } = require('../middleware/checkSubscription');
 const { createItem, getMyItems, getItemById, updateItem, deleteItem } = require('../controllers/itemController');
 const { setRate, getMyRates, deleteRate } = require('../controllers/rateController');
 const { createCategory, getMyCategories, updateCategory, deleteCategory } = require('../controllers/categoryController');
-const { getMyShopProfile } = require('../controllers/shopController');
+const {
+  getMyShopProfile,
+  updateMyProfile,
+  addPromoSlide,
+  updatePromoSlide,
+  deletePromoSlide,
+} = require('../controllers/shopController');
 const upload = require('../middleware/upload');
 
 router.use(protect, authorize('shop_admin'), checkSubscription);
@@ -18,6 +24,12 @@ router.put('/items/:id', upload.single('image'), updateItem);
 router.delete('/items/:id', deleteItem);
 
 router.get('/profile', getMyShopProfile);
+router.put('/profile', upload.single('logo'), updateMyProfile);
+
+// Promo slider (home page)
+router.post('/profile/promo-slides', upload.single('image'), addPromoSlide);
+router.put('/profile/promo-slides/:slideId', upload.single('image'), updatePromoSlide);
+router.delete('/profile/promo-slides/:slideId', deletePromoSlide);
 
 // Rates
 router.put('/rates', setRate);
