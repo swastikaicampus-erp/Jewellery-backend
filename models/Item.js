@@ -10,7 +10,7 @@ const itemSchema = new mongoose.Schema(
       enum: ['gold', 'silver', 'platinum', 'diamond', 'bronze', 'other'],
       required: true,
     },
-    karat: { type: String, enum: ['24K', '22K', '21K', '18K', '14K', null], default: null },
+    karat: { type: String, enum: ['24K', '22K', '20k', '18K', '9k', null], default: null },
     weight: { type: Number, required: true },
     makingCharge: { type: Number, default: 0 },
     imageUrl: { type: String, default: '' },
