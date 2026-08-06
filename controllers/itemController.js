@@ -5,13 +5,13 @@ const attachPrices = async (shopId, items) => {
   const rates = await Rate.find({ shopId });
   const rateMap = {};
   rates.forEach((r) => {
-    const key = r.metalType === 'silver' ? 'silver' : r.karat;
+    const key = r.karat ? `${r.metalType}-${r.karat}` : r.metalType;
     rateMap[key] = r.ratePerGram;
   });
 
   return items.map((item) => {
     const plainItem = item.toObject ? item.toObject() : item;
-    const key = plainItem.metalType === 'silver' ? 'silver' : plainItem.karat;
+    const key = plainItem.karat ? `${plainItem.metalType}-${plainItem.karat}` : plainItem.metalType;
     const ratePerGram = rateMap[key] || 0;
     const price = Math.round(ratePerGram * plainItem.weight + plainItem.makingCharge);
     return { ...plainItem, ratePerGram, price };
@@ -25,8 +25,10 @@ exports.createItem = async (req, res, next) => {
     if (!categoryId || !name || !metalType || !weight) {
       return res.status(400).json({ message: 'categoryId, name, metalType, weight zaroori hai' });
     }
-    if (metalType === 'gold' && !karat) {
-      return res.status(400).json({ message: 'Gold item ke liye karat select karo' });
+
+    const isGold = metalType.trim().toLowerCase() === 'gold';
+    if (isGold && !karat) {
+      return res.status(400).json({ message: 'Gold item ke liye karat likho' });
     }
 
     const item = await Item.create({
@@ -34,7 +36,7 @@ exports.createItem = async (req, res, next) => {
       categoryId,
       name,
       metalType,
-      karat: metalType === 'gold' ? karat : null,
+      karat: isGold ? karat : null,
       weight,
       makingCharge: makingCharge || 0,
       imageUrl: req.file ? `/uploads/${req.file.filename}` : '',

@@ -8,12 +8,16 @@ exports.setRate = async (req, res, next) => {
     if (!metalType || ratePerGram === undefined) {
       return res.status(400).json({ message: 'metalType aur ratePerGram zaroori hai' });
     }
-    if (metalType === 'gold' && !karat) {
-      return res.status(400).json({ message: 'Gold ke liye karat select karo' });
+
+    const normalizedMetal = metalType.trim().toLowerCase();
+    const isGold = normalizedMetal === 'gold';
+
+    if (isGold && !karat) {
+      return res.status(400).json({ message: 'Gold ke liye karat likho' });
     }
 
     const rate = await Rate.findOneAndUpdate(
-      { shopId: req.user.shopId, metalType, karat: metalType === 'silver' ? null : karat },
+      { shopId: req.user.shopId, metalType: normalizedMetal, karat: isGold ? karat.trim() : null },
       { ratePerGram },
       { new: true, upsert: true, setDefaultsOnInsert: true }
     );
